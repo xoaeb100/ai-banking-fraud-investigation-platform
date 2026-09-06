@@ -195,4 +195,44 @@ export class FraudFeatureEngineeringService {
       isNewTransactionType: !hasPreviousTransactionType,
     };
   }
+  async getFraudFeatures(
+    customerId: string,
+    transactionTime: Date,
+    currentAmount: number,
+    merchantId: string,
+    merchantCategory: string,
+    transactionType: TransactionType,
+  ) {
+    const [
+      transactionsLast10Min,
+      transactionsLast1Hour,
+      transactionsLast24h,
+      amountFeatures,
+      behavioralFeatures,
+    ] = await Promise.all([
+      this.transactionsLast10Min(customerId, transactionTime),
+      this.transactionsLast1Hour(customerId, transactionTime),
+      this.transactionsLast24h(customerId, transactionTime),
+      this.getAmountFeatures(customerId, transactionTime, currentAmount),
+      this.getBehavioralFeatures(
+        customerId,
+        transactionTime,
+        merchantId,
+        merchantCategory,
+        transactionType,
+      ),
+    ]);
+
+    return {
+      transactionsLast10Min,
+      transactionsLast1Hour,
+      transactionsLast24h,
+
+      ...amountFeatures,
+
+      isUnusualTransactionTime: this.isUnusualTransactionTime(transactionTime),
+
+      ...behavioralFeatures,
+    };
+  }
 }

@@ -9,6 +9,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { MlModule } from './modules/ml/ml.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
 import { FraudFeatureEngineeringModule } from './feature-engineering/fraud-feature-engineering.module';
+import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -39,6 +40,7 @@ import { FraudFeatureEngineeringModule } from './feature-engineering/fraud-featu
     MlModule,
     TransactionModule,
     FraudFeatureEngineeringModule,
+    RiskEngineModule,
   ],
 })
 export class AppModule {}
