@@ -16,6 +16,7 @@ import { RedisModule } from './modules/redis/redis.module';
 import { FraudProcessingModule } from './modules/fraud-processing/fraud-processing.module';
 import { AlertModule } from './modules/alert/alert.module';
 import { InvestigationCaseModule } from './modules/investigation-case/investigation-case.module';
+import { AiModule } from './modules/ai/ai.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -53,6 +54,7 @@ import { InvestigationCaseModule } from './modules/investigation-case/investigat
     FraudProcessingModule,
     AlertModule,
     InvestigationCaseModule,
+    AiModule,
   ],
 })
 export class AppModule {}
