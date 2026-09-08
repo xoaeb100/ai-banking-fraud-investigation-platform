@@ -77,4 +77,7 @@ export class Transaction {
 
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt!: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  fraudProcessingStartedAt!: Date | null;
 }
