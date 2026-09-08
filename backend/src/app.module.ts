@@ -10,6 +10,10 @@ import { MlModule } from './modules/ml/ml.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
 import { FraudFeatureEngineeringModule } from './feature-engineering/fraud-feature-engineering.module';
 import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
+import { VelocityModule } from './modules/velocity/velocity.module';
+import { FraudProcessingQueueModule } from './modules/fraud-processing-queue/fraud-processing-queue.module';
+import { RedisModule } from './modules/redis/redis.module';
+import { FraudProcessingModule } from './modules/fraud-processing/fraud-processing.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -41,6 +45,10 @@ import { RiskEngineModule } from './modules/risk-engine/risk-engine.module';
     TransactionModule,
     FraudFeatureEngineeringModule,
     RiskEngineModule,
+    VelocityModule,
+    FraudProcessingQueueModule,
+    RedisModule,
+    FraudProcessingModule,
   ],
 })
 export class AppModule {}

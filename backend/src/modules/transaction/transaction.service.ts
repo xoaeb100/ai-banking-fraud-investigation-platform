@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
+import { FraudProcessingQueueService } from '../fraud-processing-queue/fraud-processing-queue.service';
 import {
   FraudDetectionStatus,
   Transaction,
@@ -14,6 +14,7 @@ export class TransactionService {
   constructor(
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
+    private readonly fraudProcessingQueueService: FraudProcessingQueueService,
   ) {}
 
   async create(dto: CreateTransactionDto): Promise<Transaction> {
@@ -33,7 +34,11 @@ export class TransactionService {
       fraudDetectionStatus: FraudDetectionStatus.PENDING,
     });
 
-    return this.transactionRepository.save(transaction);
+    const savedTransaction = await this.transactionRepository.save(transaction);
+
+    await this.fraudProcessingQueueService.enqueue(savedTransaction.id);
+
+    return savedTransaction;
   }
 
   async findOne(id: string): Promise<Transaction> {
@@ -54,5 +59,62 @@ export class TransactionService {
         transactionTime: 'DESC',
       },
     });
+  }
+  async claimForFraudProcessing(transactionId: string): Promise<boolean> {
+    const result = await this.transactionRepository.update(
+      {
+        id: transactionId,
+        fraudDetectionStatus: FraudDetectionStatus.PENDING,
+      },
+      {
+        fraudDetectionStatus: FraudDetectionStatus.PROCESSING,
+        fraudProcessingStartedAt: new Date(),
+      },
+    );
+
+    return result.affected === 1;
+  }
+
+  async getTransactionForProcessing(
+    transactionId: string,
+  ): Promise<Transaction | null> {
+    return this.transactionRepository.findOne({
+      where: {
+        id: transactionId,
+      },
+    });
+  }
+
+  async markFraudProcessingForRetry(transactionId: string): Promise<void> {
+    await this.transactionRepository.update(
+      {
+        id: transactionId,
+        fraudDetectionStatus: FraudDetectionStatus.PROCESSING,
+      },
+      {
+        fraudDetectionStatus: FraudDetectionStatus.YET_TO_PROCESS,
+      },
+    );
+  }
+
+  async recoverStuckFraudProcessing(timeoutMinutes: number): Promise<number> {
+    const cutoff = new Date(Date.now() - timeoutMinutes * 60 * 1000);
+
+    const result = await this.transactionRepository
+      .createQueryBuilder()
+      .update(Transaction)
+      .set({
+        fraudDetectionStatus: FraudDetectionStatus.YET_TO_PROCESS,
+        fraudProcessingStartedAt: null,
+      })
+      .where('"fraudDetectionStatus" = :status', {
+        status: FraudDetectionStatus.PROCESSING,
+      })
+      .andWhere('"fraudProcessingStartedAt" < :cutoff', {
+        cutoff,
+      })
+      .execute();
+
+    return result.affected ?? 0;
   }
 }
