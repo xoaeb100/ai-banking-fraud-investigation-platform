@@ -5,6 +5,9 @@ import { TransactionModule } from '../transaction/transaction.module';
 import { FraudProcessingService } from './fraud-processing.service';
 import { FraudFeatureEngineeringModule } from 'src/feature-engineering/fraud-feature-engineering.module';
 import { MlModule } from '../ml/ml.module';
+import { AlertModule } from '../alert/alert.module';
+import { RiskEngineModule } from '../risk-engine/risk-engine.module';
+import { InvestigationCaseModule } from '../investigation-case/investigation-case.module';
 
 @Module({
   imports: [
@@ -12,6 +15,9 @@ import { MlModule } from '../ml/ml.module';
     TransactionModule,
     FraudFeatureEngineeringModule,
     MlModule,
+    AlertModule,
+    RiskEngineModule,
+    InvestigationCaseModule,
   ],
   providers: [FraudProcessingService],
 })

@@ -14,6 +14,8 @@ import { VelocityModule } from './modules/velocity/velocity.module';
 import { FraudProcessingQueueModule } from './modules/fraud-processing-queue/fraud-processing-queue.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { FraudProcessingModule } from './modules/fraud-processing/fraud-processing.module';
+import { AlertModule } from './modules/alert/alert.module';
+import { InvestigationCaseModule } from './modules/investigation-case/investigation-case.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -49,6 +51,8 @@ import { FraudProcessingModule } from './modules/fraud-processing/fraud-processi
     FraudProcessingQueueModule,
     RedisModule,
     FraudProcessingModule,
+    AlertModule,
+    InvestigationCaseModule,
   ],
 })
 export class AppModule {}
