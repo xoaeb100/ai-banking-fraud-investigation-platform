@@ -4,7 +4,8 @@ import { FraudProcessingQueueService } from '../fraud-processing-queue/fraud-pro
 import { TransactionService } from '../transaction/transaction.service';
 import { FraudFeatureEngineeringService } from 'src/feature-engineering/fraud-feature-engineering.service';
 import { MlService } from '../ml/ml.service';
-
+import { RiskEngineService } from '../risk-engine/risk-engine.service';
+import { AlertService } from '../alert/alert.service';
 @Injectable()
 export class FraudProcessingService implements OnModuleInit {
   constructor(
@@ -12,6 +13,8 @@ export class FraudProcessingService implements OnModuleInit {
     private readonly transactionService: TransactionService,
     private readonly featureEngineeringService: FraudFeatureEngineeringService,
     private readonly mlService: MlService,
+    private readonly riskEngineService: RiskEngineService,
+    private readonly alertService: AlertService,
   ) {}
   async onModuleInit(): Promise<void> {
     void this.startWorker();
@@ -93,7 +96,34 @@ export class FraudProcessingService implements OnModuleInit {
 
         console.log('ML prediction:', mlPrediction);
 
-        console.log(`Processing transaction ${transaction.id}`);
+        const riskAssessment = this.riskEngineService.calculateRiskScore({
+          transactionsLast10Min: features.transactionsLast10Min,
+          amountRatio: features.amountRatio ?? 0,
+          isNewMerchant: features.isNewMerchant,
+          isUnusualTransactionTime: features.isUnusualTransactionTime,
+          mlFraudProbability: mlPrediction.fraudProbability,
+        });
+
+        console.log('Risk assessment:', riskAssessment);
+        if (
+          riskAssessment.riskLevel === 'HIGH' ||
+          riskAssessment.riskLevel === 'MEDIUM'
+        ) {
+          const alert = await this.alertService.createAlert(
+            transaction.id,
+            transaction.customerId,
+            riskAssessment,
+            features,
+          );
+
+          console.log(`Alert created: ${alert.id}`);
+
+          await this.transactionService.markFraudProcessingCompleted(
+            transactionId,
+          );
+
+          console.log(`Fraud processing completed for ${transactionId}`);
+        }
       } catch (error) {
         console.error(
           `Fraud processing failed for transaction ${transactionId}`,

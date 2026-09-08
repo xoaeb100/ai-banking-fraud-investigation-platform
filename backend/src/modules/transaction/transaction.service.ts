@@ -117,4 +117,17 @@ export class TransactionService {
 
     return result.affected ?? 0;
   }
+
+  async markFraudProcessingCompleted(transactionId: string): Promise<void> {
+    await this.transactionRepository.update(
+      {
+        id: transactionId,
+        fraudDetectionStatus: FraudDetectionStatus.PROCESSING,
+      },
+      {
+        fraudDetectionStatus: FraudDetectionStatus.COMPLETED,
+        fraudProcessingStartedAt: null,
+      },
+    );
+  }
 }
