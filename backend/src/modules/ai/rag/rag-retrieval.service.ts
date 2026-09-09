@@ -13,6 +13,7 @@ export class RagRetrievalService {
   async search(
     query: string,
     topK = 3,
+    minSimilarity = 0.7,
   ): Promise<
     {
       id: string;
@@ -28,17 +29,18 @@ export class RagRetrievalService {
 
     const results = await this.dataSource.query(
       `
-      SELECT
-        "id",
-        "documentName",
-        "section",
-        "content",
-        1 - ("embedding" <=> $1::vector) AS "similarity"
-      FROM "policy_chunks"
-      ORDER BY "embedding" <=> $1::vector
-      LIMIT $2
-      `,
-      [vector, topK],
+  SELECT
+    "id",
+    "documentName",
+    "section",
+    "content",
+    1 - ("embedding" <=> $1::vector) AS "similarity"
+  FROM "policy_chunks"
+  WHERE 1 - ("embedding" <=> $1::vector) >= $3
+  ORDER BY "embedding" <=> $1::vector
+  LIMIT $2
+  `,
+      [vector, topK, minSimilarity],
     );
 
     return results;
