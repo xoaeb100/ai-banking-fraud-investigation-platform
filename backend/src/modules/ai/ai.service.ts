@@ -7,12 +7,16 @@ import {
   InvestigationOutputSchema,
 } from './schemas/investigation-output.schema';
 import { ConfigService } from '@nestjs/config';
+import { RagRetrievalService } from './rag/rag-retrieval.service';
 
 @Injectable()
 export class AiService {
   private readonly ai: GoogleGenAI;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly ragRetrievalService: RagRetrievalService,
+  ) {
     const apiKey = this.configService.get<string>('gemini.apiKey');
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY is not configured');
@@ -26,6 +30,25 @@ export class AiService {
   async generateInvestigationSummary(
     input: InvestigationInput,
   ): Promise<InvestigationOutput> {
+    const policyQuery = `
+Fraud investigation guidance for a ${input.riskLevel} risk transaction.
+
+Risk reasons:
+${input.reasons.join('\n')}
+`;
+
+    const policyChunks = await this.ragRetrievalService.search(policyQuery, 3);
+
+    const policyContext = policyChunks
+      .map(
+        (chunk, index) => `
+Policy Source ${index + 1}:
+Document: ${chunk.documentName}
+Similarity: ${chunk.similarity}
+Content: ${chunk.content}
+`,
+      )
+      .join('\n');
     const prompt = `
 You are assisting a human fraud analyst.
 
@@ -36,7 +59,10 @@ IMPORTANT RULES:
 - Do NOT change the risk level.
 - Do NOT invent evidence.
 - Do NOT claim that the transaction is confirmed fraud.
-- Use only the evidence provided.
+- Use only the transaction evidence provided by the backend.
+- Use the retrieved policy context only to support policy-related guidance.
+- Do NOT invent policy names or policy requirements.
+- If the retrieved policy context does not contain enough information, say so.
 - The final fraud decision belongs to a human fraud analyst.
 
 Transaction evidence:
@@ -48,10 +74,18 @@ Risk Level: ${input.riskLevel}
 Risk reasons:
 ${input.reasons.map((reason) => `- ${reason}`).join('\n')}
 
+Retrieved fraud policy context:
+
+${policyContext}
+
 Return the investigation assessment using exactly the requested structured output fields.
 
 The riskAssessment must reflect the riskLevel supplied by the backend.
 Do not calculate a new risk score.
+
+For policyReferences:
+- Only reference policies contained in the retrieved policy context.
+- Do not invent policy names.
 `;
 
     try {

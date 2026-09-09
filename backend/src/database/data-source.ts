@@ -7,6 +7,7 @@ import { User } from '../modules/users/entities/user.entity';
 import { Transaction } from '../modules/transaction/entities/transaction.entity';
 import { Alert } from '../modules/alert/entities/alert.entity';
 import { InvestigationCase } from '../modules/investigation-case/entities/investigation-case.entity';
+import { PolicyChunk } from '../modules/ai/rag/entities/policy-chunk.entity';
 config();
 
 export default new DataSource({
@@ -19,7 +20,7 @@ export default new DataSource({
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
 
-  entities: [Role, User, Transaction, Alert, InvestigationCase],
+  entities: [Role, User, Transaction, Alert, InvestigationCase, PolicyChunk],
 
   migrations: ['src/database/migrations/*.ts'],
 
