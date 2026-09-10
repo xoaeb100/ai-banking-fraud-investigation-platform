@@ -7,6 +7,7 @@ import { RagIngestionService } from './rag/rag-injestion.service';
 import { IngestPolicyDto } from './dto/ingest-policy.dto';
 import { Query } from '@nestjs/common';
 import { RagRetrievalService } from './rag/rag-retrieval.service';
+import { RagEvaluationService } from './rag/rag-evaluation.service';
 
 @Controller('ai')
 export class AiController {
@@ -15,6 +16,7 @@ export class AiController {
     private readonly embeddingService: EmbeddingService,
     private readonly ragIngestionService: RagIngestionService,
     private readonly ragRetrievalService: RagRetrievalService,
+    private readonly ragEvaluationService: RagEvaluationService,
   ) {}
 
   @Post('investigate')
@@ -43,5 +45,10 @@ export class AiController {
   @Get('rag/search')
   searchPolicy(@Query('q') query: string, @Query('topK') topK = '3') {
     return this.ragRetrievalService.search(query, Number(topK));
+  }
+
+  @Get('rag/evaluate')
+  evaluateRag() {
+    return this.ragEvaluationService.evaluate();
   }
 }

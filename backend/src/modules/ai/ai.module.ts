@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PolicyChunk } from './rag/entities/policy-chunk.entity';
 import { RagIngestionService } from './rag/rag-injestion.service';
 import { RagRetrievalService } from './rag/rag-retrieval.service';
+import { RagEvaluationService } from './rag/rag-evaluation.service';
 @Module({
   controllers: [AiController],
   providers: [
@@ -15,6 +16,7 @@ import { RagRetrievalService } from './rag/rag-retrieval.service';
     ChunkingService,
     RagIngestionService,
     RagRetrievalService,
+    RagEvaluationService,
   ],
   exports: [EmbeddingService, ChunkingService],
   imports: [TypeOrmModule.forFeature([PolicyChunk])],
