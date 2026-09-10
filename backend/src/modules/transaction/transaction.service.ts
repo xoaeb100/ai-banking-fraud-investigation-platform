@@ -130,4 +130,18 @@ export class TransactionService {
       },
     );
   }
+  async getCustomerHistory(
+    customerId: string,
+    limit = 10,
+  ): Promise<Transaction[]> {
+    return this.transactionRepository.find({
+      where: {
+        customerId,
+      },
+      order: {
+        transactionTime: 'DESC',
+      },
+      take: limit,
+    });
+  }
 }
