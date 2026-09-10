@@ -8,6 +8,7 @@ import { PolicyChunk } from './rag/entities/policy-chunk.entity';
 import { RagIngestionService } from './rag/rag-injestion.service';
 import { RagRetrievalService } from './rag/rag-retrieval.service';
 import { RagEvaluationService } from './rag/rag-evaluation.service';
+import { TransactionModule } from '../transaction/transaction.module';
 @Module({
   controllers: [AiController],
   providers: [
@@ -19,6 +20,6 @@ import { RagEvaluationService } from './rag/rag-evaluation.service';
     RagEvaluationService,
   ],
   exports: [EmbeddingService, ChunkingService],
-  imports: [TypeOrmModule.forFeature([PolicyChunk])],
+  imports: [TypeOrmModule.forFeature([PolicyChunk]), TransactionModule],
 })
 export class AiModule {}
