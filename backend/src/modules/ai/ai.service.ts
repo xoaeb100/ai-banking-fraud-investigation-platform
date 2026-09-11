@@ -1,6 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { GoogleGenAI, Type, FunctionDeclaration } from '@google/genai';
-import { createCustomerTools } from './tools/customer.tools';
 import { InvestigationInput } from './dto/investigation-input.dto';
 import {
   InvestigationOutput,
@@ -8,23 +7,28 @@ import {
 } from './schemas/investigation-output.schema';
 import { ConfigService } from '@nestjs/config';
 import { RagRetrievalService } from './rag/rag-retrieval.service';
-import { TransactionService } from '../transaction/transaction.service';
-import { createTransactionTools } from './tools/transaction.tools';
+import { InvestigationAgent } from './agents/investigation.agent';
 @Injectable()
 export class AiService {
   private readonly ai: GoogleGenAI;
-
+  private readonly model: string;
   constructor(
     private readonly configService: ConfigService,
     private readonly ragRetrievalService: RagRetrievalService,
-    private readonly transactionService: TransactionService,
+    private readonly investigationAgent: InvestigationAgent,
   ) {
     const apiKey = this.configService.get<string>('gemini.apiKey');
 
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY is not configured');
     }
+    const model = this.configService.get<string>('gemini.model');
 
+    if (!model) {
+      throw new Error('GEMINI_MODEL is not configured');
+    }
+
+    this.model = model;
     this.ai = new GoogleGenAI({
       apiKey,
     });
@@ -76,12 +80,13 @@ Available tools:
 
 Investigation requirements:
 
-- You MUST call get_transaction using the transaction ID before completing the investigation.
-- After receiving the transaction, identify its customer ID.
-- You MUST call get_customer_history using the customer ID associated with the transaction.
-- Use the tool results as evidence for your investigation.
-- You may call the tools sequentially when one tool's result provides information required by another tool.
-- After you have gathered the necessary information, produce the structured investigation report.
+- Start by retrieving the investigated transaction using get_transaction.
+- After receiving the transaction, decide what additional information is necessary to investigate it.
+- Use get_customer_history when customer behavior or recent transaction activity is relevant to the investigation.
+- You may call available tools sequentially when one tool's result provides information needed for another tool.
+- Do not call a tool if its information is not needed.
+- Stop gathering information when you have sufficient evidence to produce the investigation report.
+- Use tool results as evidence for your investigation.
 
 IMPORTANT:
 - Treat transaction timestamps carefully.
@@ -154,94 +159,7 @@ ${policyContext}
         },
       ];
 
-      const response = await this.withRetryAndTimeout(
-        () =>
-          this.ai.models.generateContent({
-            model: 'gemini-3.5-flash',
-            contents,
-            config: {
-              temperature: 0.1,
-              tools,
-            },
-          }),
-        20000,
-      );
-      const transactionTools = {
-        ...createTransactionTools(this.transactionService),
-        ...createCustomerTools(this.transactionService),
-      };
-
-      let currentResponse = response;
-
-      for (let step = 0; step < 5; step++) {
-        const modelParts =
-          currentResponse.candidates?.[0]?.content?.parts ?? [];
-
-        const functionCalls = modelParts
-          .filter((part) => part.functionCall)
-          .map((part) => part.functionCall!);
-
-        // No more tool calls.
-        // The model is ready to produce the final investigation.
-        if (functionCalls.length === 0) {
-          break;
-        }
-
-        console.log(`TOOL STEP ${step + 1}`);
-
-        contents.push({
-          role: 'model',
-          parts: modelParts,
-        });
-
-        const functionResponses: any[] = [];
-
-        for (const functionCall of functionCalls) {
-          console.log('TOOL NAME:', functionCall.name);
-          console.log('TOOL ARGS:', functionCall.args);
-
-          if (!functionCall.name) {
-            throw new Error('Tool call is missing a function name');
-          }
-
-          const tool = transactionTools[functionCall.name];
-
-          if (!tool) {
-            throw new Error(`Unknown tool: ${functionCall.name}`);
-          }
-
-          const toolResult = await tool(functionCall.args);
-
-          console.log('TOOL RESULT:', toolResult);
-
-          functionResponses.push({
-            functionResponse: {
-              name: functionCall.name,
-              response: {
-                result: toolResult,
-              },
-            },
-          });
-        }
-
-        contents.push({
-          role: 'user',
-          parts: functionResponses,
-        });
-
-        currentResponse = await this.withRetryAndTimeout(
-          () =>
-            this.ai.models.generateContent({
-              model: 'gemini-3.6-flash',
-              contents,
-              config: {
-                temperature: 0.1,
-                tools,
-              },
-            }),
-          20000,
-        );
-      }
+      await this.investigationAgent.investigate(this.ai, contents, tools);
       // =========================================================
       // STEP 6
       // Ask Gemini for the final structured investigation report.
@@ -250,7 +168,7 @@ ${policyContext}
       const finalResponse = await this.withRetryAndTimeout(
         () =>
           this.ai.models.generateContent({
-            model: 'gemini-3.5-flash',
+            model: this.model,
             contents,
             config: {
               temperature: 0.1,
