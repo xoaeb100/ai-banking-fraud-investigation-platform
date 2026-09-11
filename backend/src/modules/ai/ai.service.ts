@@ -6,7 +6,6 @@ import {
   InvestigationOutputSchema,
 } from './schemas/investigation-output.schema';
 import { ConfigService } from '@nestjs/config';
-import { RagRetrievalService } from './rag/rag-retrieval.service';
 import { InvestigationAgent } from './agents/investigation.agent';
 @Injectable()
 export class AiService {
@@ -14,7 +13,6 @@ export class AiService {
   private readonly model: string;
   constructor(
     private readonly configService: ConfigService,
-    private readonly ragRetrievalService: RagRetrievalService,
     private readonly investigationAgent: InvestigationAgent,
   ) {
     const apiKey = this.configService.get<string>('gemini.apiKey');
@@ -37,26 +35,6 @@ export class AiService {
   async generateInvestigationSummary(
     input: InvestigationInput,
   ): Promise<InvestigationOutput> {
-    const policyQuery = `
-Fraud investigation guidance for a ${input.riskLevel} risk transaction.
-
-Risk reasons:
-${input.reasons.join('\n')}
-`;
-
-    const policyChunks = await this.ragRetrievalService.search(policyQuery, 3);
-
-    const policyContext = policyChunks
-      .map(
-        (chunk, index) => `
-Policy Source ${index + 1}:
-Document: ${chunk.documentName}
-Similarity: ${chunk.similarity}
-Content: ${chunk.content}
-`,
-      )
-      .join('\n');
-
     const prompt = `
 You are assisting a human fraud analyst investigating a banking transaction.
 
@@ -78,6 +56,9 @@ Available tools:
 2. get_customer_history
    Use this to retrieve recent transactions belonging to the customer.
 
+3. search_fraud_policy
+   Use this when you need fraud-policy guidance to interpret the evidence or determine the appropriate investigation procedure.
+
 Investigation requirements:
 
 - Start by retrieving the investigated transaction using get_transaction.
@@ -87,6 +68,8 @@ Investigation requirements:
 - Do not call a tool if its information is not needed.
 - Stop gathering information when you have sufficient evidence to produce the investigation report.
 - Use tool results as evidence for your investigation.
+- Use search_fraud_policy when policy guidance is relevant to the investigation.
+- Prefer retrieved policy content over assumptions about internal fraud procedures.
 
 IMPORTANT:
 - Treat transaction timestamps carefully.
@@ -99,10 +82,6 @@ IMPORTANT:
 - Do NOT invent transaction information.
 - Do NOT claim that the transaction is confirmed fraud.
 - The final fraud decision belongs to a human fraud analyst.
-
-Retrieved fraud policy context:
-
-${policyContext}
 `;
     const functionDeclarations: FunctionDeclaration[] = [
       {
@@ -137,6 +116,28 @@ ${policyContext}
             },
           },
           required: ['customerId'],
+        },
+      },
+
+      {
+        name: 'search_fraud_policy',
+        description:
+          'Search the fraud policy knowledge base for guidance relevant to the current investigation.',
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            query: {
+              type: Type.STRING,
+              description:
+                'The fraud investigation question or policy topic to search for.',
+            },
+            limit: {
+              type: Type.NUMBER,
+              description:
+                'Maximum number of relevant policy chunks to return. Maximum allowed is 5.',
+            },
+          },
+          required: ['query'],
         },
       },
     ];

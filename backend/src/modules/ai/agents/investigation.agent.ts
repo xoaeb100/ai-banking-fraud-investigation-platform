@@ -4,7 +4,8 @@ import { TransactionService } from '../../transaction/transaction.service';
 import { createTransactionTools } from '../tools/transaction.tools';
 import { createCustomerTools } from '../tools/customer.tools';
 import { ConfigService } from '@nestjs/config';
-
+import { RagRetrievalService } from '../rag/rag-retrieval.service';
+import { createFraudPolicyTools } from '../tools/fraud-policy.tools';
 @Injectable()
 export class InvestigationAgent {
   private readonly model: string;
@@ -12,6 +13,7 @@ export class InvestigationAgent {
   constructor(
     private readonly transactionService: TransactionService,
     private readonly configService: ConfigService,
+    private readonly ragRetrievalService: RagRetrievalService,
   ) {
     const model = this.configService.get<string>('gemini.model');
 
@@ -30,6 +32,7 @@ export class InvestigationAgent {
     const transactionTools = {
       ...createTransactionTools(this.transactionService),
       ...createCustomerTools(this.transactionService),
+      ...createFraudPolicyTools(this.ragRetrievalService),
     };
 
     let currentResponse = await ai.models.generateContent({
@@ -61,7 +64,11 @@ export class InvestigationAgent {
 
       const functionResponses: any[] = [];
 
-      const allowedTools = new Set(['get_transaction', 'get_customer_history']);
+      const allowedTools = new Set([
+        'get_transaction',
+        'get_customer_history',
+        'search_fraud_policy',
+      ]);
 
       for (const functionCall of functionCalls) {
         console.log('TOOL NAME:', functionCall.name);

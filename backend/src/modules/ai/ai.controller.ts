@@ -8,6 +8,7 @@ import { IngestPolicyDto } from './dto/ingest-policy.dto';
 import { Query } from '@nestjs/common';
 import { RagRetrievalService } from './rag/rag-retrieval.service';
 import { RagEvaluationService } from './rag/rag-evaluation.service';
+import { createFraudPolicyTools } from './tools/fraud-policy.tools';
 
 @Controller('ai')
 export class AiController {
@@ -50,5 +51,18 @@ export class AiController {
   @Get('rag/evaluate')
   evaluateRag() {
     return this.ragEvaluationService.evaluate();
+  }
+
+  @Get('rag/test-tool')
+  async testFraudPolicyTool(
+    @Query('q') query: string,
+    @Query('limit') limit = '3',
+  ) {
+    const tools = createFraudPolicyTools(this.ragRetrievalService);
+
+    return tools.search_fraud_policy({
+      query,
+      limit: Number(limit),
+    });
   }
 }
