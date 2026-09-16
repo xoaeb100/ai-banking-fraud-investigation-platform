@@ -5,8 +5,13 @@ export const InvestigationOutputSchema = z.object({
 
   summary: z.string(),
 
-  evidence: z.array(z.string()),
-
+  evidence: z.array(
+    z.object({
+      type: z.enum(['OBSERVED_FACT', 'POLICY', 'INTERPRETATION']),
+      source: z.string(),
+      content: z.string(),
+    }),
+  ),
   policyReferences: z.array(z.string()),
 
   recommendedAction: z.enum(['MONITOR', 'REVIEW', 'ESCALATE']),
