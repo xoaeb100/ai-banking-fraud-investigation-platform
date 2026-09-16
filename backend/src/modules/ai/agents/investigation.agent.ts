@@ -1,3 +1,12 @@
+/**
+ * The investigation agent is advisory only.
+ *
+ * It may retrieve evidence and generate an investigation report,
+ * but it must never modify investigation case status,
+ * risk score, or risk level.
+ *
+ * Final case decisions remain under human analyst control.
+ */
 import { Injectable } from '@nestjs/common';
 import { GoogleGenAI } from '@google/genai';
 import { TransactionService } from '../../transaction/transaction.service';
