@@ -15,18 +15,26 @@ export class RagEvaluationService {
         testCase.query,
         3,
       );
+      const expectedMatch = (result: any) =>
+        result.documentName === testCase.expectedDocument &&
+        result.section === testCase.expectedSection;
 
-      const hit = retrieved.some(
-        (result) =>
-          result.documentName === testCase.expectedDocument &&
-          result.section === testCase.expectedSection,
-      );
+      const hitAt1 = retrieved.length > 0 && expectedMatch(retrieved[0]);
+
+      const hitAt3 = retrieved.some(expectedMatch);
+
+      // const hit = retrieved.some(
+      //   (result) =>
+      //     result.documentName === testCase.expectedDocument &&
+      //     result.section === testCase.expectedSection,
+      // );
 
       results.push({
         query: testCase.query,
         expectedDocument: testCase.expectedDocument,
         expectedSection: testCase.expectedSection,
-        hit,
+        hitAt1,
+        hitAt3,
         results: retrieved.map((result) => ({
           documentName: result.documentName,
           section: result.section,
@@ -35,15 +43,23 @@ export class RagEvaluationService {
       });
     }
 
-    const successfulQueries = results.filter((result) => result.hit).length;
-
+    const hitAt1Count = results.filter((result) => result.hitAt1).length;
+    const hitAt3Count = results.filter((result) => result.hitAt3).length;
     const totalQueries = results.length;
 
     return {
-      metric: 'Hit@3',
-      successfulQueries,
-      totalQueries,
-      score: successfulQueries / totalQueries,
+      metrics: {
+        hitAt1: {
+          successfulQueries: hitAt1Count,
+          totalQueries,
+          score: totalQueries > 0 ? hitAt1Count / totalQueries : 0,
+        },
+        hitAt3: {
+          successfulQueries: hitAt3Count,
+          totalQueries,
+          score: totalQueries > 0 ? hitAt3Count / totalQueries : 0,
+        },
+      },
       results,
     };
   }

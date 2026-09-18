@@ -7,6 +7,7 @@ import {
 } from './schemas/investigation-output.schema';
 import { ConfigService } from '@nestjs/config';
 import { InvestigationAgent } from './agents/investigation.agent';
+import { randomUUID } from 'crypto';
 @Injectable()
 export class AiService {
   private readonly ai: GoogleGenAI;
@@ -34,7 +35,18 @@ export class AiService {
 
   async generateInvestigationSummary(
     input: InvestigationInput,
+    requestId?: string,
   ): Promise<InvestigationOutput> {
+    const correlationId = requestId ?? randomUUID();
+    const investigationStartedAt = Date.now();
+    const promptVersion = 'investigation-v1';
+    console.log(`[${correlationId}] Investigation started`, {
+      transactionId: input.transactionId,
+      riskScore: input.riskScore,
+      riskLevel: input.riskLevel,
+      model: this.model,
+      promptVersion,
+    });
     const prompt = `
 You are assisting a human fraud analyst investigating a banking transaction.
 
@@ -187,7 +199,14 @@ IMPORTANT:
         },
       ];
 
-      await this.investigationAgent.investigate(this.ai, contents, tools);
+      const agentResult = await this.investigationAgent.investigate(
+        this.ai,
+        contents,
+        tools,
+        correlationId,
+        promptVersion,
+      );
+      console.log(`[${correlationId}] Agent evaluation metadata`, agentResult);
       // =========================================================
       // STEP 6
       // Ask Gemini for the final structured investigation report.
@@ -280,16 +299,25 @@ IMPORTANT:
 
       const validated = InvestigationOutputSchema.parse(parsed);
 
+      const totalLatencyMs = Date.now() - investigationStartedAt;
+
+      console.log(`[${correlationId}] Investigation completed`, {
+        totalLatencyMs,
+      });
+
       return {
         ...validated,
         riskAssessment: input.riskLevel,
       };
-    } catch (error) {
-      console.error('LLM investigation failed', error);
+    } catch (error: any) {
+      const latencyMs = Date.now() - investigationStartedAt;
 
-      throw new InternalServerErrorException(
-        'Failed to generate investigation summary',
-      );
+      console.error(`[${correlationId}] Investigation failed`, {
+        latencyMs,
+        error: error?.message ?? error,
+      });
+
+      throw new InternalServerErrorException('AI investigation failed');
     }
   }
 
