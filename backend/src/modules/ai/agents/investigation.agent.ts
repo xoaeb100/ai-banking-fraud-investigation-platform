@@ -37,12 +37,28 @@ export class InvestigationAgent {
     ai: GoogleGenAI,
     contents: any[],
     tools: any[],
-  ): Promise<void> {
+    correlationId: string,
+    promptVersion: string,
+  ): Promise<{
+    toolCalls: string[];
+    llmCallCount: number;
+  }> {
+    const toolCalls: string[] = [];
     const transactionTools = {
       ...createTransactionTools(this.transactionService),
       ...createCustomerTools(this.transactionService),
       ...createFraudPolicyTools(this.ragRetrievalService),
     };
+
+    console.log(`[${correlationId}] Agent configuration`, {
+      model: this.model,
+      promptVersion,
+    });
+    let llmCallCount = 0;
+
+    llmCallCount++;
+
+    const llmStartedAt = Date.now();
 
     let currentResponse = await ai.models.generateContent({
       model: this.model,
@@ -51,6 +67,11 @@ export class InvestigationAgent {
         temperature: 0.1,
         tools,
       },
+    });
+
+    console.log(`[${correlationId}] LLM CALL ${llmCallCount} completed`, {
+      latencyMs: Date.now() - llmStartedAt,
+      usage: currentResponse.usageMetadata,
     });
 
     for (let step = 0; step < 5; step++) {
@@ -64,8 +85,7 @@ export class InvestigationAgent {
         break;
       }
 
-      console.log(`AGENT TOOL STEP ${step + 1}`);
-
+      console.log(`[${correlationId}] AGENT TOOL STEP ${step + 1}`);
       contents.push({
         role: 'model',
         parts: modelParts,
@@ -80,8 +100,8 @@ export class InvestigationAgent {
       ]);
 
       for (const functionCall of functionCalls) {
-        console.log('TOOL NAME:', functionCall.name);
-        console.log('TOOL ARGS:', functionCall.args);
+        console.log(`[${correlationId}] TOOL NAME:`, functionCall.name);
+        console.log(`[${correlationId}] TOOL ARGS:`, functionCall.args);
 
         if (!functionCall.name) {
           throw new Error('Tool call is missing a function name');
@@ -99,24 +119,46 @@ export class InvestigationAgent {
           throw new Error(`Tool "${functionCall.name}" is not registered`);
         }
 
-        const toolResult = await tool(functionCall.args);
+        const toolStartedAt = Date.now();
 
-        console.log('TOOL RESULT:', toolResult);
+        try {
+          const toolResult = await tool(functionCall.args);
 
-        functionResponses.push({
-          functionResponse: {
-            name: functionCall.name,
-            response: {
-              result: toolResult,
+          console.log(`[${correlationId}] TOOL COMPLETED`, {
+            tool: functionCall.name,
+            latencyMs: Date.now() - toolStartedAt,
+          });
+
+          console.log(`[${correlationId}] TOOL RESULT:`, toolResult);
+
+          functionResponses.push({
+            functionResponse: {
+              name: functionCall.name,
+              response: {
+                result: toolResult,
+              },
             },
-          },
-        });
-      }
+          });
 
+          toolCalls.push(functionCall.name);
+        } catch (error) {
+          console.error(`[${correlationId}] TOOL FAILED`, {
+            tool: functionCall.name,
+            latencyMs: Date.now() - toolStartedAt,
+            error: error instanceof Error ? error.message : error,
+          });
+
+          throw error;
+        }
+      }
       contents.push({
         role: 'user',
         parts: functionResponses,
       });
+
+      llmCallCount++;
+
+      const llmStartedAt = Date.now();
 
       currentResponse = await ai.models.generateContent({
         model: this.model,
@@ -126,8 +168,14 @@ export class InvestigationAgent {
           tools,
         },
       });
+      console.log(`[${correlationId}] LLM CALL ${llmCallCount} completed`, {
+        latencyMs: Date.now() - llmStartedAt,
+        usage: currentResponse.usageMetadata,
+      });
     }
-
-    return;
+    return {
+      toolCalls,
+      llmCallCount,
+    };
   }
 }

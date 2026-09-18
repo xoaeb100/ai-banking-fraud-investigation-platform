@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Headers } from '@nestjs/common';
 
 import { AiService } from './ai.service';
 import { EmbeddingService } from './embedding/embedding.service';
@@ -9,6 +9,7 @@ import { Query } from '@nestjs/common';
 import { RagRetrievalService } from './rag/rag-retrieval.service';
 import { RagEvaluationService } from './rag/rag-evaluation.service';
 import { createFraudPolicyTools } from './tools/fraud-policy.tools';
+import { AgentEvaluationService } from './agents/agent-evaluation.service';
 
 @Controller('ai')
 export class AiController {
@@ -18,11 +19,15 @@ export class AiController {
     private readonly ragIngestionService: RagIngestionService,
     private readonly ragRetrievalService: RagRetrievalService,
     private readonly ragEvaluationService: RagEvaluationService,
+    private readonly agentEvaluationService: AgentEvaluationService,
   ) {}
 
   @Post('investigate')
-  investigate(@Body() input: InvestigationInput) {
-    return this.aiService.generateInvestigationSummary(input);
+  investigate(
+    @Body() input: InvestigationInput,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.aiService.generateInvestigationSummary(input, requestId);
   }
 
   @Post('test-embedding')
@@ -64,5 +69,10 @@ export class AiController {
       query,
       limit: Number(limit),
     });
+  }
+
+  @Get('agent/evaluate')
+  evaluateAgent() {
+    return this.agentEvaluationService.evaluate();
   }
 }

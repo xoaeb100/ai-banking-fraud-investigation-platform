@@ -10,6 +10,7 @@ import { RagRetrievalService } from './rag/rag-retrieval.service';
 import { RagEvaluationService } from './rag/rag-evaluation.service';
 import { TransactionModule } from '../transaction/transaction.module';
 import { InvestigationAgent } from './agents/investigation.agent';
+import { AgentEvaluationService } from './agents/agent-evaluation.service';
 @Module({
   controllers: [AiController],
   providers: [
@@ -20,6 +21,7 @@ import { InvestigationAgent } from './agents/investigation.agent';
     RagRetrievalService,
     RagEvaluationService,
     InvestigationAgent,
+    AgentEvaluationService,
   ],
   exports: [EmbeddingService, ChunkingService],
   imports: [TypeOrmModule.forFeature([PolicyChunk]), TransactionModule],
