@@ -1,0 +1,97 @@
+<div class="page-header">
+  <div>
+    <h1>Transactions</h1>
+    <p>Monitor transaction processing and fraud detection status.</p>
+  </div>
+
+  <p-button
+    label="Refresh"
+    icon="pi pi-refresh"
+    [loading]="loading"
+    (onClick)="loadTransactions()"
+  >
+  </p-button>
+</div>
+
+@if (error) {
+  <div class="error-message">
+    {{ error }}
+  </div>
+}
+
+<p-table
+  [value]="transactions"
+  [loading]="loading"
+  [paginator]="true"
+  [rows]="10"
+  [showGridlines]="true"
+  responsiveLayout="scroll"
+>
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Transaction</th>
+      <th>Customer</th>
+      <th>Amount</th>
+      <th>Merchant</th>
+      <th>Type</th>
+      <th>Status</th>
+      <th>Transaction Time</th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-transaction>
+    <tr>
+      <td>
+        <a
+          [routerLink]="['/transactions', transaction.id]"
+          class="transaction-link"
+        >
+          {{ transaction.id | slice: 0 : 8 }}...
+        </a>
+      </td>
+
+      <td>{{ transaction.customerId | slice: 0 : 8 }}...</td>
+
+      <td>
+        <strong>
+          {{ transaction.currency }}
+          {{ transaction.amount | number: "1.2-2" }}
+        </strong>
+      </td>
+
+      <td>
+        <div class="merchant">
+          <span>
+            {{ transaction.merchantId }}
+          </span>
+
+          <small>
+            {{ transaction.merchantCategory }}
+          </small>
+        </div>
+      </td>
+
+      <td>
+        {{ transaction.transactionType }}
+      </td>
+
+      <td>
+        <p-tag
+          [value]="transaction.fraudDetectionStatus"
+          [severity]="getRiskSeverity(transaction.fraudDetectionStatus)"
+        >
+        </p-tag>
+      </td>
+
+      <td>
+        {{ transaction.transactionTime | date: "dd MMM yyyy, HH:mm" }}
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="7">No transactions found.</td>
+    </tr>
+  </ng-template>
+</p-table>

@@ -1,0 +1,206 @@
+.dashboard {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+/* Header */
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 28px;
+}
+
+.page-header h1 {
+  margin: 0;
+
+  font-size: 28px;
+  font-weight: 700;
+
+  color: var(--text-primary);
+
+  letter-spacing: -0.5px;
+}
+
+.page-header p {
+  margin: 6px 0 0;
+
+  color: var(--text-secondary);
+}
+
+/* Statistics */
+
+.stats-grid {
+  display: grid;
+
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 16px;
+
+  margin-bottom: 36px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+}
+
+.stat-icon {
+  width: 42px;
+  height: 42px;
+
+  border-radius: 9px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+.stat-icon i {
+  font-size: 17px;
+}
+
+/* Icon colors */
+
+.stat-icon.total {
+  background: #e8eefc;
+  color: #1d4ed8;
+}
+
+.stat-icon.pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.stat-icon.processing {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.stat-icon.completed {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 700;
+
+  color: var(--text-primary);
+}
+
+/* Section */
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 14px;
+}
+
+.section-header h2 {
+  margin: 0;
+
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.section-header p {
+  margin: 4px 0 0;
+
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.view-all {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  color: var(--primary);
+
+  text-decoration: none;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.view-all:hover {
+  text-decoration: underline;
+}
+
+/* Merchant */
+
+.merchant {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.merchant small {
+  color: var(--text-secondary);
+
+  font-size: 11px;
+}
+
+/* Transaction */
+
+.transaction-link {
+  color: var(--primary);
+
+  font-family: monospace;
+
+  font-weight: 600;
+
+  text-decoration: none;
+}
+
+.transaction-link:hover {
+  text-decoration: underline;
+}
+
+/* Empty */
+
+.empty-state {
+  text-align: center;
+
+  padding: 30px;
+
+  color: var(--text-secondary);
+}
+
+/* Error */
+
+.error-message {
+  padding: 12px 16px;
+
+  margin-bottom: 20px;
+
+  border-radius: 7px;
+
+  background: #fee2e2;
+  color: #991b1b;
+
+  font-size: 13px;
+}

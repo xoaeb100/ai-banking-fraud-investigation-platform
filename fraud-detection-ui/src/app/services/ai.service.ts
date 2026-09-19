@@ -1,0 +1,28 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+import { InvestigationOutput } from '../models/investigation-output.model';
+
+export interface InvestigationInput {
+  transactionId: string;
+  riskScore: number;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  reasons: string[];
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AiService {
+  private readonly apiUrl = 'http://localhost:3000/ai';
+
+  constructor(private readonly http: HttpClient) {}
+
+  investigate(input: InvestigationInput): Observable<InvestigationOutput> {
+    return this.http.post<InvestigationOutput>(
+      `${this.apiUrl}/investigate`,
+      input,
+    );
+  }
+}

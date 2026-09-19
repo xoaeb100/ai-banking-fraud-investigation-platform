@@ -1,0 +1,176 @@
+<div class="dashboard">
+  <!-- Header -->
+
+  <div class="page-header">
+    <div>
+      <h1>Fraud Dashboard</h1>
+
+      <p>Overview of transaction monitoring and fraud detection.</p>
+    </div>
+
+    <p-button
+      label="Refresh"
+      icon="pi pi-refresh"
+      [loading]="loading"
+      (onClick)="loadDashboard()"
+    >
+    </p-button>
+  </div>
+
+  @if (error) {
+    <div class="error-message">
+      {{ error }}
+    </div>
+  }
+
+  <!-- Statistics -->
+
+  <div class="stats-grid">
+    <p-card>
+      <div class="stat-card">
+        <div class="stat-icon total">
+          <i class="pi pi-credit-card"></i>
+        </div>
+
+        <div class="stat-content">
+          <span class="stat-label"> Total Transactions </span>
+
+          <strong class="stat-value">
+            {{ totalTransactions }}
+          </strong>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="stat-card">
+        <div class="stat-icon pending">
+          <i class="pi pi-clock"></i>
+        </div>
+
+        <div class="stat-content">
+          <span class="stat-label"> Pending Detection </span>
+
+          <strong class="stat-value">
+            {{ pendingTransactions }}
+          </strong>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="stat-card">
+        <div class="stat-icon processing">
+          <i class="pi pi-spin pi-spinner"></i>
+        </div>
+
+        <div class="stat-content">
+          <span class="stat-label"> Processing </span>
+
+          <strong class="stat-value">
+            {{ processingTransactions }}
+          </strong>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="stat-card">
+        <div class="stat-icon completed">
+          <i class="pi pi-check-circle"></i>
+        </div>
+
+        <div class="stat-content">
+          <span class="stat-label"> Completed </span>
+
+          <strong class="stat-value">
+            {{ completedTransactions }}
+          </strong>
+        </div>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Recent Transactions -->
+
+  <div class="section-header">
+    <div>
+      <h2>Recent Transactions</h2>
+
+      <p>Latest transactions received by the platform.</p>
+    </div>
+
+    <a routerLink="/transactions" class="view-all">
+      View all
+      <i class="pi pi-arrow-right"></i>
+    </a>
+  </div>
+
+  <p-card>
+    <p-table
+      [value]="recentTransactions"
+      [loading]="loading"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Transaction</th>
+          <th>Amount</th>
+          <th>Merchant</th>
+          <th>Status</th>
+          <th>Time</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-transaction>
+        <tr>
+          <td>
+            <a
+              [routerLink]="['/transactions', transaction.id]"
+              class="transaction-link"
+            >
+              {{ transaction.id | slice: 0 : 8 }}...
+            </a>
+          </td>
+
+          <td>
+            <strong>
+              {{ transaction.currency }}
+              {{ transaction.amount | number: "1.2-2" }}
+            </strong>
+          </td>
+
+          <td>
+            <div class="merchant">
+              <span>
+                {{ transaction.merchantId }}
+              </span>
+
+              <small>
+                {{ transaction.merchantCategory }}
+              </small>
+            </div>
+          </td>
+
+          <td>
+            <p-tag
+              [value]="transaction.fraudDetectionStatus"
+              [severity]="getStatusSeverity(transaction.fraudDetectionStatus)"
+            >
+            </p-tag>
+          </td>
+
+          <td>
+            {{ transaction.transactionTime | date: "dd MMM, HH:mm" }}
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="empty-state">No transactions available.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>

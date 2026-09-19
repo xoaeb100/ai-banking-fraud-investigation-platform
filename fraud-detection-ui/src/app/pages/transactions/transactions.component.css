@@ -1,0 +1,41 @@
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  margin: 0;
+  color: #111827;
+  font-size: 28px;
+}
+
+.page-header p {
+  margin-top: 8px;
+  color: #6b7280;
+}
+
+.transaction-id {
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.merchant {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.merchant small {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.error-message {
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #991b1b;
+}

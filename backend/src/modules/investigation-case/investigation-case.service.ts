@@ -36,7 +36,7 @@ export class InvestigationCaseService {
 
   async getCaseById(id: string): Promise<InvestigationCase | null> {
     return this.caseRepository.findOne({
-      where: { id },
+      where: { alertId: id },
     });
   }
 

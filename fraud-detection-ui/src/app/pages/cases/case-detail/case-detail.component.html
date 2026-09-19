@@ -1,0 +1,300 @@
+<div class="page-header">
+  <div>
+    <h1>Investigation Case</h1>
+    <p>Review transaction evidence and fraud risk signals.</p>
+  </div>
+
+  <div class="header-actions">
+    <button
+      pButton
+      type="button"
+      [label]="
+        investigation ? 'Run Investigation Again' : 'Investigate with AI'
+      "
+      icon="pi pi-sparkles"
+      [loading]="investigating"
+      [disabled]="investigating || !alert || !caseData"
+      (click)="runInvestigation()"
+    ></button>
+
+    <a routerLink="/cases" class="back-link">
+      <i class="pi pi-arrow-left"></i>
+      Back to Cases
+    </a>
+  </div>
+</div>
+
+@if (loading) {
+  <div class="loading-state">
+    <i class="pi pi-spin pi-spinner"></i>
+    Loading investigation...
+  </div>
+} @else if (caseData && alert && transaction) {
+  <div class="case-meta">
+    <div>
+      <span class="label">Case ID</span>
+      <strong>{{ caseData.id }}</strong>
+    </div>
+
+    <div>
+      <span class="label">Status</span>
+      <p-tag
+        [value]="caseData.status"
+        [severity]="
+          caseData.status === 'OPEN'
+            ? 'danger'
+            : caseData.status === 'IN_PROGRESS'
+              ? 'warn'
+              : 'success'
+        "
+      ></p-tag>
+    </div>
+
+    <div>
+      <span class="label">Created</span>
+      <strong>{{ caseData.createdAt | date: "dd MMM yyyy, HH:mm" }}</strong>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <!-- Risk -->
+    <section class="card risk-card">
+      <div class="card-header">
+        <div>
+          <span class="eyebrow">RISK ASSESSMENT</span>
+          <h2>Fraud Risk</h2>
+        </div>
+
+        <p-tag
+          [value]="alert.riskLevel"
+          [severity]="
+            alert.riskLevel === 'HIGH'
+              ? 'danger'
+              : alert.riskLevel === 'MEDIUM'
+                ? 'warn'
+                : 'success'
+          "
+        ></p-tag>
+      </div>
+
+      <div class="risk-score">
+        <span>{{ alert.riskScore }}</span>
+        <small>/ 100</small>
+      </div>
+
+      <div class="probability">
+        ML fraud probability:
+        <strong>{{ alert.mlFraudProbability * 100 | number: "1.0-2" }}%</strong>
+      </div>
+    </section>
+
+    <!-- Transaction -->
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <span class="eyebrow">TRANSACTION</span>
+          <h2>Transaction Details</h2>
+        </div>
+      </div>
+
+      <div class="details-grid">
+        <div>
+          <span class="label">Transaction ID</span>
+          <strong>{{ transaction.id }}</strong>
+        </div>
+
+        <div>
+          <span class="label">Amount</span>
+          <strong>{{ transaction.currency }} {{ transaction.amount }}</strong>
+        </div>
+
+        <div>
+          <span class="label">Merchant</span>
+          <strong>{{ transaction.merchantId }}</strong>
+        </div>
+
+        <div>
+          <span class="label">Category</span>
+          <strong>{{ transaction.merchantCategory }}</strong>
+        </div>
+
+        <div>
+          <span class="label">Transaction Type</span>
+          <strong>{{ transaction.transactionType }}</strong>
+        </div>
+
+        <div>
+          <span class="label">Transaction Time</span>
+          <strong>
+            {{ transaction.transactionTime | date: "dd MMM yyyy, HH:mm:ss" }}
+          </strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- Evidence -->
+    <section class="card full-width">
+      <div class="card-header">
+        <div>
+          <span class="eyebrow">RISK EVIDENCE</span>
+          <h2>Why was this transaction flagged?</h2>
+        </div>
+      </div>
+
+      <div class="evidence-list">
+        @for (reason of alert.reasons; track reason) {
+          <div class="evidence-item">
+            <i class="pi pi-exclamation-triangle"></i>
+            <span>{{ reason }}</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    @if (investigation) {
+      <section class="card full-width ai-report">
+        <div class="card-header">
+          <div>
+            <span class="eyebrow">AI INVESTIGATION</span>
+            <h2>Investigation Report</h2>
+            <p class="ai-subtitle">
+              Evidence gathered from transaction data, customer history and
+              fraud policy.
+            </p>
+          </div>
+
+          <p-tag
+            [value]="investigation.recommendedAction"
+            [severity]="
+              investigation.recommendedAction === 'ESCALATE'
+                ? 'danger'
+                : investigation.recommendedAction === 'REVIEW'
+                  ? 'warn'
+                  : 'success'
+            "
+          ></p-tag>
+        </div>
+
+        <div class="ai-summary">
+          <h3>Summary</h3>
+          <p>{{ investigation.summary }}</p>
+        </div>
+
+        <div class="ai-confidence">
+          <span>Investigation confidence</span>
+
+          <strong>
+            {{ investigation.confidence * 100 | number: "1.0-0" }}%
+          </strong>
+        </div>
+
+        <div class="ai-section">
+          <h3>Investigation Evidence</h3>
+
+          <div class="ai-evidence-list">
+            @for (item of investigation.evidence; track $index) {
+              <div class="ai-evidence-item">
+                <div class="evidence-type">
+                  <p-tag
+                    [value]="item.type"
+                    [severity]="
+                      item.type === 'OBSERVED_FACT'
+                        ? 'info'
+                        : item.type === 'POLICY'
+                          ? 'success'
+                          : 'warn'
+                    "
+                  ></p-tag>
+                </div>
+
+                <div class="evidence-content">
+                  <strong>{{ item.source }}</strong>
+                  <p>{{ item.content }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (investigation.policyReferences.length > 0) {
+          <div class="ai-section">
+            <h3>Policy References</h3>
+
+            <div class="policy-list">
+              @for (policy of investigation.policyReferences; track policy) {
+                <div class="policy-item">
+                  <i class="pi pi-book"></i>
+                  <span>{{ policy }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </section>
+    }
+
+    <!-- Velocity -->
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <span class="eyebrow">BEHAVIOR</span>
+          <h2>Transaction Velocity</h2>
+        </div>
+      </div>
+
+      <div class="velocity-grid">
+        <div>
+          <strong>{{ alert.transactionsLast10Min }}</strong>
+          <span>Last 10 minutes</span>
+        </div>
+
+        <div>
+          <strong>{{ alert.transactionsLast1Hour }}</strong>
+          <span>Last hour</span>
+        </div>
+
+        <div>
+          <strong>{{ alert.transactionsLast24h }}</strong>
+          <span>Last 24 hours</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Anomaly -->
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <span class="eyebrow">ANOMALY SIGNALS</span>
+          <h2>Behavioral Signals</h2>
+        </div>
+      </div>
+
+      <div class="signal-list">
+        <div>
+          <span>Unusual transaction time</span>
+          <strong>{{ alert.isUnusualTransactionTime ? "Yes" : "No" }}</strong>
+        </div>
+
+        <div>
+          <span>New merchant</span>
+          <strong>{{ alert.isNewMerchant ? "Yes" : "No" }}</strong>
+        </div>
+
+        <div>
+          <span>New merchant category</span>
+          <strong>{{ alert.isNewMerchantCategory ? "Yes" : "No" }}</strong>
+        </div>
+
+        <div>
+          <span>New transaction type</span>
+          <strong>{{ alert.isNewTransactionType ? "Yes" : "No" }}</strong>
+        </div>
+
+        <div>
+          <span>Amount ratio</span>
+          <strong>{{ alert.amountRatio ?? "—" }}</strong>
+        </div>
+      </div>
+    </section>
+  </div>
+}

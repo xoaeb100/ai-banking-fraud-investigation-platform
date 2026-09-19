@@ -72,4 +72,17 @@ export class AlertService {
 
     return savedAlert;
   }
+
+  async findAll(): Promise<Alert[]> {
+    return this.alertRepository.find({
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+  async findOne(id: string): Promise<Alert | null> {
+    return this.alertRepository.findOne({
+      where: { id },
+    });
+  }
 }

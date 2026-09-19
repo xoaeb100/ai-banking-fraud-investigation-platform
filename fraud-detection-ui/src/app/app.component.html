@@ -1,0 +1,80 @@
+<div class="app-shell">
+  <!-- Header -->
+
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">
+        <i class="pi pi-shield"></i>
+      </div>
+
+      <div class="brand-name">Fraud Detection</div>
+    </div>
+
+    <div class="header-user">
+      <div class="status-dot"></div>
+
+      <div class="user-info">
+        <span class="user-name">Fraud Analyst</span>
+        <span class="user-role">Investigation Desk</span>
+      </div>
+
+      <i class="pi pi-chevron-down user-chevron"></i>
+    </div>
+  </header>
+
+  <!-- Main Layout -->
+
+  <div class="app-body">
+    <!-- Sidebar -->
+
+    <aside class="sidebar">
+      <nav class="navigation">
+        <div class="nav-section-title">WORKSPACE</div>
+
+        <a
+          routerLink="/dashboard"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="nav-item"
+        >
+          <i class="pi pi-chart-bar"></i>
+
+          <span>Dashboard</span>
+        </a>
+
+        <a
+          routerLink="/transactions"
+          routerLinkActive="active"
+          class="nav-item"
+        >
+          <i class="pi pi-credit-card"></i>
+
+          <span>Transactions</span>
+        </a>
+
+        <a routerLink="/cases" routerLinkActive="active" class="nav-item">
+          <i class="pi pi-folder"></i>
+
+          <span>Investigation Cases</span>
+        </a>
+      </nav>
+
+      <!-- Sidebar User -->
+
+      <div class="sidebar-user">
+        <div class="avatar">FA</div>
+
+        <div class="sidebar-user-info">
+          <strong>Fraud Analyst</strong>
+          <span>Analyst</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Page Content -->
+
+    <main class="page-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

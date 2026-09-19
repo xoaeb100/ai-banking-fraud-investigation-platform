@@ -1,0 +1,101 @@
+<div class="page-header">
+  <div>
+    <h1>Investigation Cases</h1>
+    <p>Review suspicious transactions requiring analyst attention.</p>
+  </div>
+
+  <button
+    pButton
+    type="button"
+    label="Refresh"
+    icon="pi pi-refresh"
+    (click)="loadAlerts()"
+  ></button>
+</div>
+
+<p-table
+  [value]="alerts"
+  [loading]="loading"
+  [paginator]="true"
+  [rows]="10"
+  [rowsPerPageOptions]="[10, 20, 50]"
+  responsiveLayout="scroll"
+>
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Case</th>
+      <th>Risk</th>
+      <th>Score</th>
+      <th>Transaction</th>
+      <th>Reasons</th>
+      <th>Status</th>
+      <th>Created</th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-alert>
+    <tr>
+      <td>
+        <span class="case-id">
+          <a [routerLink]="['/cases', alert.id]" class="case-link">
+            {{ alert.id | slice: 0 : 8 }}
+          </a>
+        </span>
+      </td>
+
+      <td>
+        <p-tag
+          [value]="alert.riskLevel"
+          [severity]="
+            alert.riskLevel === 'HIGH'
+              ? 'danger'
+              : alert.riskLevel === 'MEDIUM'
+                ? 'warn'
+                : 'success'
+          "
+        ></p-tag>
+      </td>
+
+      <td>
+        <strong>{{ alert.riskScore }}</strong>
+      </td>
+
+      <td>
+        <span class="transaction-id">
+          {{ alert.transactionId | slice: 0 : 8 }}
+        </span>
+      </td>
+
+      <td>
+        <div class="reasons">
+          @for (reason of alert.reasons; track reason) {
+            <span>{{ reason }}</span>
+          }
+        </div>
+      </td>
+
+      <td>
+        <p-tag
+          [value]="alert.status"
+          [severity]="
+            alert.status === 'OPEN'
+              ? 'danger'
+              : alert.status === 'IN_PROGRESS'
+                ? 'warn'
+                : 'success'
+          "
+        ></p-tag>
+      </td>
+
+      <td>
+        {{ alert.createdAt | date: "dd MMM yyyy, HH:mm" }}
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="7" class="empty-state">No investigation cases found.</td>
+    </tr>
+  </ng-template>
+</p-table>

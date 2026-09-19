@@ -1,0 +1,91 @@
+<div class="page-header">
+  <div>
+    <h1>Transaction Details</h1>
+
+    <p>Detailed information for transaction</p>
+  </div>
+</div>
+
+@if (loading) {
+  <p>Loading transaction...</p>
+}
+
+@if (error) {
+  <div class="error-message">
+    {{ error }}
+  </div>
+}
+
+@if (transaction && !loading) {
+  <div class="details-grid">
+    <p-card header="Transaction Information">
+      <div class="details">
+        <div class="detail">
+          <span>ID</span>
+          <strong>{{ transaction.id }}</strong>
+        </div>
+
+        <div class="detail">
+          <span>Customer</span>
+          <strong>{{ transaction.customerId }}</strong>
+        </div>
+
+        <div class="detail">
+          <span>Amount</span>
+          <strong>
+            {{ transaction.currency }}
+            {{ transaction.amount | number: "1.2-2" }}
+          </strong>
+        </div>
+
+        <div class="detail">
+          <span>Merchant</span>
+          <strong>{{ transaction.merchantId }}</strong>
+        </div>
+
+        <div class="detail">
+          <span>Merchant Category</span>
+          <strong>{{ transaction.merchantCategory }}</strong>
+        </div>
+
+        <div class="detail">
+          <span>Transaction Type</span>
+          <strong>{{ transaction.transactionType }}</strong>
+        </div>
+
+        <div class="detail">
+          <span>Transaction Status</span>
+          <strong>{{ transaction.status }}</strong>
+        </div>
+
+        <div class="detail">
+          <span>Transaction Time</span>
+          <strong>
+            {{ transaction.transactionTime | date: "dd MMM yyyy, HH:mm:ss" }}
+          </strong>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card header="Fraud Processing">
+      <div class="fraud-status">
+        <span>Detection Status</span>
+
+        <p-tag [value]="transaction.fraudDetectionStatus"> </p-tag>
+      </div>
+
+      <div class="detail">
+        <span>Processing Started</span>
+
+        <strong>
+          {{
+            transaction.fraudProcessingStartedAt
+              ? (transaction.fraudProcessingStartedAt
+                | date: "dd MMM yyyy, HH:mm:ss")
+              : "Not started"
+          }}
+        </strong>
+      </div>
+    </p-card>
+  </div>
+}
