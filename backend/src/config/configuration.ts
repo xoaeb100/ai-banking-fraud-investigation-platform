@@ -20,4 +20,8 @@ export default () => ({
     apiKey: process.env.GEMINI_API_KEY || '',
     model: process.env.GEMINI_MODEL || 'gemini-3.6-flash',
   },
+
+  ml: {
+    serviceUrl: process.env.ML_SERVICE_URL || 'http://localhost:8000',
+  },
 });

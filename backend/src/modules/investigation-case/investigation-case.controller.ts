@@ -10,18 +10,21 @@ export class InvestigationCaseController {
   @Get() getAllCases() {
     return this.investigationCaseService.getAllCases();
   }
-  @Get(':id') getCase(@Param('id') id: string) {
-    return this.investigationCaseService.getCaseById(id);
-  }
-  @Patch(':id/status') updateStatus(
-    @Param('id') id: string,
-    @Body() dto: UpdateCaseStatusDto,
-  ) {
-    return this.investigationCaseService.updateStatus(id, dto.status);
+  @Get(':alertId')
+  getCase(@Param('alertId') alertId: string) {
+    return this.investigationCaseService.getCaseByAlertId(alertId);
   }
 
-  @Patch(':id/assign')
-  assignCase(@Param('id') id: string, @Body() dto: AssignCaseDto) {
-    return this.investigationCaseService.assignCase(id, dto.assignedTo);
+  @Patch(':alertId/status')
+  updateStatus(
+    @Param('alertId') alertId: string,
+    @Body() dto: UpdateCaseStatusDto,
+  ) {
+    return this.investigationCaseService.updateStatus(alertId, dto.status);
+  }
+
+  @Patch(':alertId/assign')
+  assignCase(@Param('alertId') alertId: string, @Body() dto: AssignCaseDto) {
+    return this.investigationCaseService.assignCase(alertId, dto.assignedTo);
   }
 }

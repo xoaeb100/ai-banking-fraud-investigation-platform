@@ -53,7 +53,7 @@ export class FraudProcessingService implements OnModuleInit {
         const features = await this.featureEngineeringService.getFraudFeatures(
           transaction.customerId,
           transaction.transactionTime,
-          parseInt(transaction.amount, 10),
+          Number(transaction.amount),
           transaction.merchantId,
           transaction.merchantCategory,
           transaction.transactionType,
@@ -117,13 +117,12 @@ export class FraudProcessingService implements OnModuleInit {
           );
 
           console.log(`Alert created: ${alert.id}`);
-
-          await this.transactionService.markFraudProcessingCompleted(
-            transactionId,
-          );
-
-          console.log(`Fraud processing completed for ${transactionId}`);
         }
+        await this.transactionService.markFraudProcessingCompleted(
+          transactionId,
+        );
+
+        console.log(`Fraud processing completed for ${transactionId}`);
       } catch (error) {
         console.error(
           `Fraud processing failed for transaction ${transactionId}`,
@@ -146,6 +145,15 @@ export class FraudProcessingService implements OnModuleInit {
 
       if (recovered > 0) {
         console.log(`Recovered ${recovered} stuck fraud transaction(s)`);
+      }
+
+      const retried =
+        await this.transactionService.requeueTransactionsForRetry();
+
+      if (retried.length > 0) {
+        console.log(
+          `Requeued ${retried.length} transaction(s) for fraud processing`,
+        );
       }
     }
   }

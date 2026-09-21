@@ -144,4 +144,36 @@ export class TransactionService {
       take: limit,
     });
   }
+
+  async requeueTransactionsForRetry(): Promise<string[]> {
+    const transactions = await this.transactionRepository.find({
+      where: {
+        fraudDetectionStatus: FraudDetectionStatus.YET_TO_PROCESS,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (transactions.length === 0) {
+      return [];
+    }
+
+    const transactionIds = transactions.map((transaction) => transaction.id);
+
+    await this.transactionRepository.update(
+      {
+        fraudDetectionStatus: FraudDetectionStatus.YET_TO_PROCESS,
+      },
+      {
+        fraudDetectionStatus: FraudDetectionStatus.PENDING,
+      },
+    );
+
+    for (const transactionId of transactionIds) {
+      await this.fraudProcessingQueueService.enqueue(transactionId);
+    }
+
+    return transactionIds;
+  }
 }

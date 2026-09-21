@@ -34,27 +34,26 @@ export class InvestigationCaseService {
     });
   }
 
-  async getCaseById(id: string): Promise<InvestigationCase | null> {
+  async getCaseByAlertId(alertId: string): Promise<InvestigationCase | null> {
     return this.caseRepository.findOne({
-      where: { alertId: id },
+      where: { alertId },
     });
   }
-
   async updateStatus(
-    id: string,
+    alertId: string,
     status: InvestigationCaseStatus,
   ): Promise<InvestigationCase | null> {
-    await this.caseRepository.update({ id }, { status });
+    await this.caseRepository.update({ alertId }, { status });
 
-    return this.getCaseById(id);
+    return this.getCaseByAlertId(alertId);
   }
 
   async assignCase(
-    id: string,
+    alertId: string,
     assignedTo: string,
   ): Promise<InvestigationCase | null> {
-    await this.caseRepository.update({ id }, { assignedTo });
+    await this.caseRepository.update({ alertId }, { assignedTo });
 
-    return this.getCaseById(id);
+    return this.getCaseByAlertId(alertId);
   }
 }

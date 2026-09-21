@@ -2,11 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Transaction } from '../models/transaction.model';
+import { API_CONFIG } from '../config/api.config';
+
 @Injectable({
   providedIn: 'root',
 })
 export class TransactionService {
-  private readonly apiUrl = 'http://localhost:3000/transactions';
+  private readonly apiUrl = `${API_CONFIG.baseUrl}/transactions`;
 
   constructor(private readonly http: HttpClient) {}
 
